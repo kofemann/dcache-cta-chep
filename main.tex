@@ -13,9 +13,28 @@
 \documentclass{webofc}
 \usepackage[varg]{txfonts}   % Web of Conferences font
 
-\usepackage[sorting=none]{biblatex}
 \usepackage{hyperref}
-\addbibresource{bibliography.bib}
+
+\usepackage{pgfgantt}
+\usepackage{capt-of}
+\usepackage{listings}
+
+\lstset{
+  frame=single,                    % frame around the code
+  %numbers=left,                   % where to put the line-numbers
+  stepnumber=1,                   % the step between two line-numbers.
+  numbersep=5pt,                  % how far the line-numbers are from the code
+  backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+  showspaces=false,               % show spaces adding particular underscores
+  showstringspaces=false,         % underline spaces within strings
+  showtabs=false,                 % show tabs within strings adding particular underscores
+  tabsize=2,                      % sets default tabsize to 2 spaces
+  captionpos=b,                   % sets the caption-position to bottom
+  breaklines=false,                % sets automatic line breaking
+  breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
+}
+
+
 %
 % Put here some packages required or/and some personnal commands
 %
@@ -40,25 +59,16 @@
 }
 
 \institute{
-   \affil{
-       \orgname{Deutsches Elektronen-Synchrotron DESY}, \orgaddress{\street{Notkestrasse 85}, \postcode{22607} \city{Hamburg}, \country{Germany}}
-       }
+Deutsches Elektronen-Synchrotron DESY, Notkestrasse 85, 22607 Hamburg, Germany
 }
 
 \abstract{%
   The ever-increasing amount of data that is produced by modern scientific facilities like EuXFEL or LHC puts
   high pressure on the data management infrastructure at the laboratories. This includes poorly shareable resources
   of archival storage, typically, tape libraries. To achieve maximal efficiency of the available tape resources a
-  deep integration between hardware and software components is required.
-
-  The CERN Tape Archive (CTA) is an open-source storage management system developed by CERN to manage LHC experiment
+  deep integration between hardware and software components is required. The CERN Tape Archive (CTA) is an open-source storage management system developed by CERN to manage LHC experiment
   data on tape. Although today CTA's primary target is CERN Tier-0, the data management group at DESY considers the
-  CTA is a main alternative to commercial HSM systems.
-
-  dCache has an extensible tape interface that allows connectivity almost to any tape system. Together with the CERN
-  Tape Archive team we are working on seamless integration of CTA into dCache.
-
-  This work shows the design of dCache-CTA integration, its current status and its first deployment experience at DESY.
+  CTA is a main alternative to commercial HSM systems. dCache has an extensible tape interface that allows connectivity almost to any tape system. Together with the CERN Tape Archive developers, the storage team at DESY works on seamless integration of CTA into dCache.
 }
 %
 \maketitle
@@ -113,32 +123,67 @@ The CERN Tape Archive (CTA)\cite{cta} is an open-source storage system developed
 replace the legacy CASTOR system that is used to manage experiments data on tape. Its architecture is designed
 to meet the requirements of LHC Run 3 as well as HL-LHC, thus needing the most data-intensive scientific workloads.
 
-The CTA has two key components: frontend and tape daemon\ref{fig:cta_overview}. The frontend accepts the requests, like archive, retrieve, delete or cancel, from the attached disk storage and puts them into the request queue. If needed, the file catalog is updated. The scheduling logic is embedded into the tape daemons, which are per-tape drive processes and seek matching tasks in the request queue. Once the desired number of requests is collected, the data is moved  between disk and tape media.
+The CTA has two key components: frontend and tape daemon\ref{fig:cta_overview}. The frontend accepts the requests, like archive, retrieve, delete or cancel, from the attached disk storage and puts them into the request queue. If needed, the file catalog is updated. The scheduling logic is embedded into the tape daemons, which are per-tape drive processes and seek matching tasks in the request queue. Once the desired number of requests is collected, the data is moved between disk and tape media using embedded xroot\cite{xrootd} client.
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[scale=0.25]{cta-design.png}
     \caption{CTA design overview}
     \label{fig:cta_overview}
 \end{figure}
 
-Out of the box, CTA comes with a frontend that communicates with EOS, the disk system deployed at CERN. However, as CTA's queuing system is not EOS aware, other frontend implementations are possible.
+Out of the box, CTA comes with a frontend that communicates with EOS, the disk system deployed at CERN. However, as CTA's queuing system is not EOS aware, other frontend implementations are possible. Moreover, the CTA project is actively working on flexibility in the system to allow wider adoption by other sites, ease of contributions from other developers and drop of CERN-specific dependencies in the provided binary packages \cite{cta_beyond_cern}.
+
+For trigger data migration between disk and tape CTA supports two request types: \textit{Archive} and \textit{Retrieve}. The retrieve operation can be canceled with \textit{Cancel Retrieve} request. The \textit{Delete} request is used to cancel the archive operation or/and to remove an existing file from the tape catalog. In the case of the EOS disk frontend all those operations are tight to EOS filesystem events, like \textit{CREATE}, \textit{CLOSE}, \textit{READ} and \textit{DELETE}. The requests are encoded with Google's protobuf \cite{prtobuf} and sent from EOS server to CTA frontend over Xroot Scalable Service Interface (XrootdSSI). In addition to data migration requests the forntend supports operations required by admin-cli tool, like \textit{define tape pool} or \textit{enable/disable tape drives}.
 
 \section{dCache Integration with CTA}
 \label{sec:integration}
 
-dCache has a flexible tape interface which allows connectivity to any tape system. There are two ways that a file can be migrated to tape. Ether dCache calls a tape system specific copy command or through interaction via an in-dCache tape system specific driver, called a nearline storage provider. The latter has been shown (by NDGF, TRIUMF and KIT Tier-1s), to provide better resource utilization and efficiency\cite{endit_kit}. Thus, for seamless integration of CTA the dCache developers at DESY have implemented CTA specific nearline storage provider, called dcache-cta, and a corresponding frontend component for CTA. The communication between dCache and the new forntend is based on Google’s gRPC library.
+dCache has a flexible tape interface which allows connectivity to any tape system. There are two ways that a file can be migrated to tape. Ether dCache calls a tape system specific copy command or through interaction via an in-dCache tape system specific driver, called a nearline storage provider. The latter has been shown (by NDGF, TRIUMF and KIT Tier-1s), to provide better resource utilization and efficiency\cite{endit_kit}. Thus, for seamless integration of CTA the dCache developers at DESY have implemented CTA specific nearline storage provider, called dcache-cta\cite{dcache_cta}, and a corresponding frontend component for CTA. The communication between dCache and the new forntend is based on Google’s gRPC library.
 
-\begin{figure}
+\begin{lstlisting}[label=grpc-frontend,caption={gRPC service definition},keywords={service,rpc,returns}]
+    service CtaRpc
+    {
+      rpc Create (Request) returns (CreateResponse) {}
+      rpc Archive (Request) returns (ArchiveResponse) {}
+      rpc Retrieve (Request) returns (RetrieveResponse) {}
+      rpc Delete (Request) returns (Empty) {}
+      rpc CancelRetrieve (Request) returns (Empty) {}
+    
+      rpc Version (Empty) returns (Version) {}
+    }
+\end{lstlisting}
+
+The gRPC-based service is limited to data migration operations, thus the XrootdSSI-based frontend is needed to provide admin-tool functionality\footnote{There is an ongoing development to migrate the admin interface to gRPC-based frontend. This activity is not directly correlated to dCache with CTA integration}.
+
+\begin{figure}[h]
     \centering
     \includegraphics[scale=0.25]{dcache-cta-integration.png}
     \caption{dCache integration with CTA}
     \label{fig:dcache_integration}
 \end{figure}
 
-\newpage
-\section{Bibliography}
-\label{refs}
-\printbibliography
 
+\section{Migration from existing tape software}
+\label{migraion}
+
+\section{First operational experience}
+\label{experence}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.30 ]{cta-deployment-desy.png}
+    \caption{dCache with CTA. Deployment at DESY}
+    \label{fig:dcache_cta_deplyment}
+\end{figure}
+
+\section{Summary and future work}
+\label{summary}
+
+Today, we are pretty confident that dCache+CTA will address the data archival requirements HEP, Photon Science and EuXFEL at DESY. We hope that other sites that have dCache and tape libraries or plan to have one will benefit from our work and experience. Thus, all activities are documented and shared with the dCache community.
+
+The dCache+CTA is installed at DESY and under intensive testing. A test instance is connected to physical hardware and a production environment like load is applied. After three decades with OSM we have to gain new operational experience with CTA, understand system behaviour under high load, and recognize error cases. Moreover, the existing tape cartridges,which are written with OSM, should be recognized by CTA. A joint team of developers from Fermilab and DESY works together to extend CTA's tape server to support multiple tape formats.
+
+\bibliography{bibliography.bib}
 \end{document}
