@@ -68,7 +68,7 @@ Deutsches Elektronen-Synchrotron DESY, Notkestrasse 85, 22607 Hamburg, Germany
   of archival storage, typically, tape libraries. To achieve maximal efficiency of the available tape resources a
   deep integration between hardware and software components is required. The CERN Tape Archive (CTA) is an open-source storage management system developed by CERN to manage LHC experiment
   data on tape. Although today CTA's primary target is CERN Tier-0, the data management group at DESY considers the
-  CTA is a main alternative to commercial HSM systems. dCache has an extensible tape interface that allows connectivity almost to any tape system. Together with the CERN Tape Archive developers, the storage team at DESY works on seamless integration of CTA into dCache.
+  CTA as a main alternative to commercial HSM systems. dCache has an extensible tape interface that allows connectivity almost to any tape system. Together with the CERN Tape Archive developers, the storage team at DESY works on seamless integration of CTA into dCache.
 }
 %
 \maketitle
@@ -81,10 +81,10 @@ on the data management infrastructure at the laboratories. The challenges that h
 life-cycle: from ingest, efficient data analysis, up to long-term preservation. The latter typically utilizes magnetic
 tape media, which in combination with disk storage covers the data management requirements. DESY-IT groups use dCache\cite{dcache}, a
 storage system developed at DESY in collaboration with Fermilab and Nordic eInfrastructure Collaboration (NeIC), to manage
-large numbers of disk servers and transparent data migration to and from archival storage.
+large numbers of disk servers and transparent data migration to and from an archival storage.
 
 Even though today large hard disk-based storage systems are cost, space and volume-effective (1 PB disk storage requires less than a ${1m^{3}}$ of space),
-magnetic tapes are still the best option for long-term data archival, especially for so-called cold data, data that is rarely accessed.
+magnetic tapes are still the best option for long-term data archival, especially for so-called cold data, data that are rarely accessed.
 Indeed, tape cartridges don't require electric power when not used, can store up to 20TB of uncompressed data and are designed for
 15 - 30 years of archival storage. To organize a large number of tape cartridges, tape libraries with robotic arms are used.
 
@@ -100,30 +100,30 @@ Since the early 90's DESY-IT has been relying on Open Storage Manager (OSM) soft
 During these three decades, the OSM underwent many changes. Over 80\% of the original code base has been updated to address computer, network,
 operating system and software paradigms that have changed over decades. Nevertheless, the scaling capabilities put into the original design
 don't apply today. Moreover, the commercial software license of OSM doesn't allow us to share our changes with the broader scientific community.
-Thus, a new scalable and preferably open-source success is required.
+Thus, a new scalable and preferably open-source successor is required.
 
 With dCache as the primary disk layer in front of an HSM, the tape system should fulfill the following requirements:
 
 \begin{itemize}
-    \item Maximize tape HW efficiency
-    \item Integration into DESY ecosystem
-    \item Integration with dCache tape interface
-    \item Support Enterprise \& LTO
-    \item Daily turnover about 1PB
-    \item Stable operation for the next decade
-    \item Should be Open-source, adopting open standards
-    \item Wide user and technology community
-    \item State-of-the-art integration/use development tools (CI/CD)
+    \item maximize tape HW efficiency,
+    \item integration into DESY ecosystem,
+    \item integration with dCache tape interface,
+    \item support Enterprise \& LTO,
+    \item daily turnover about 1PB,
+    \item stable operation for the next decade,
+    \item should be Open-source, adopting open standards,
+    \item wide user and technology community,
+    \item state-of-the-art integration/use development tools (CI/CD).
 \end{itemize}
 
 \section{Cern Tape Arcive}
 \label{sec:cta}
 
 The CERN Tape Archive (CTA)\cite{cta} is an open-source storage system developed by the CERN IT storage group to
-replace the legacy CASTOR system that is used to manage experiments data on tape. Its architecture is designed
+replace the legacy CASTOR system that is used to manage experiments data on tapes. Its architecture is designed
 to meet the requirements of LHC Run 3 as well as HL-LHC, thus needing the most data-intensive scientific workloads.
 
-The CTA has two key components: frontend and tape daemon\ref{fig:cta_overview}. The frontend accepts the requests, like archive, retrieve, delete or cancel, from the attached disk storage and puts them into the request queue. If needed, the file catalog is updated. The scheduling logic is embedded into the tape daemons, which are per-tape drive processes and seek matching tasks in the request queue. Once the desired number of requests is collected, the data is moved between disk and tape media using embedded xroot\cite{xrootd} client.
+The CTA has two key components: frontend and tape daemon (Fig. \ref{fig:cta_overview}). The frontend accepts requests, like archive, retrieve, delete or cancel, from the attached disk storage and puts them into a request queue. If needed, the file catalog is updated. The scheduling logic is embedded into the tape daemons, which are per-tape drive processes and seek matching tasks in the request queue. Once the desired number of requests is collected, the data are moved between disk and tape media using embedded xroot\cite{xrootd} client.
 
 \begin{figure}[h]
     \centering
@@ -134,7 +134,7 @@ The CTA has two key components: frontend and tape daemon\ref{fig:cta_overview}. 
 
 Out of the box, CTA comes with a frontend that communicates with EOS, the disk system deployed at CERN. However, as CTA's queuing system is not EOS aware, other frontend implementations are possible. Moreover, the CTA project is actively working on flexibility in the system to allow wider adoption by other sites, ease of contributions from other developers and drop of CERN-specific dependencies in the provided binary packages \cite{cta_beyond_cern}.
 
-For trigger data migration between disk and tape CTA supports two request types: \textit{Archive} and \textit{Retrieve}. The retrieve operation can be canceled with \textit{Cancel Retrieve} request. The \textit{Delete} request is used to cancel the archive operation or/and to remove an existing file from the tape catalog. In the case of the EOS disk frontend all those operations are tight to EOS filesystem events, like \textit{CREATE}, \textit{CLOSE}, \textit{READ} and \textit{DELETE}. The requests are encoded with Google's protobuf \cite{prtobuf} and sent from EOS server to CTA frontend over Xroot Scalable Service Interface (XrootdSSI). In addition to data migration requests the forntend supports operations required by admin-cli tool, like \textit{define tape pool} or \textit{enable/disable tape drives}.
+For trigger data migration between disk and tape CTA supports two request types: \textit{Archive} and \textit{Retrieve}. The retrieve operation can be canceled with \textit{Cancel Retrieve} request. The \textit{Delete} request is used to cancel the archive operation or/and to remove an existing file from the tape catalog. In the case of the EOS disk frontend all those operations are tight to EOS filesystem events, like \textit{CREATE}, \textit{CLOSE}, \textit{READ} and \textit{DELETE}. The requests are encoded with Google's protobuf \cite{prtobuf} and sent from EOS server to CTA frontend over Xroot Scalable Service Interface (XrootdSSI). In addition to data migration requests the forntend supports operations required by admin-cli tool, like \textit{define tape pool} or \textit{enable/disable tape drive}.
 
 The CTA scheduler queue is backed by the CEPH object store or by a shared filesystem. This allows hundreds of thousands of requests to be collected for optimal scheduling decisions.
 
@@ -158,7 +158,7 @@ dCache has a flexible tape interface which allows connectivity to any tape syste
 
 The gRPC-based service is limited to data migration operations, thus the XrootdSSI-based frontend is needed to provide admin-tool functionality\footnote{There is an ongoing development to migrate the admin interface to gRPC-based\cite{grpc} frontend. This activity is not directly correlated to dCache with CTA integration}.
 
-As CTA has its own scheduler, to avoid double scheduling,  the flush and restore request queuing at the dCache pools should be disabled. By this, all HSM requests from dCache are directly submitted to the CTA scheduler.
+As CTA has its own scheduler, to avoid double scheduling,  the flush and restore request queuing at the dCache pools should be disabled. In this way all HSM requests from dCache are directly submitted to the CTA scheduler.
 
 \begin{figure}[h]
     \centering
@@ -170,9 +170,14 @@ As CTA has its own scheduler, to avoid double scheduling,  the flush and restore
 \section{Migration from OSM}
 \label{migraion}
 
-DESY has a long history of providing HSM interface for scientific data. Today we have about XX PB on the tape media. Obviously, the migration to CTA should avoid physical file copies from one tape media to another and be performed only by conversion of the existing OSM database schema to the CTA catalog format. Additionally, the CTA tape servers must be able to read existing OSM-formed tapes and, finally, the files HSM reference in the dCache must be updated with CTA-relevant information.
+DESY has a long history of providing HSM interface for scientific data. Today we have about 170PB on the tape media. Obviously, the migration to CTA should avoid physical file copies from one tape media to another and be performed only by conversion of the existing OSM database schema to the CTA catalog format. The migration proceude ware split into three steps:
+\begin{itemize}
+    \item database schema migration,
+    \item update CTA tape server to support OSM-formated tapes,
+    \item update file HSM related metadata in dCache with CTA-relevant rference.
+\end{itemize}
 
-To add OSM tape format support to CTA, the CTA catalog was extended to specify 
+To add OSM tape format support to CTA, the CTA catalog was extended to understand 
 which format is used by a particular tape. This information is then propagated to the tape servers, which use a format-specific reader\footnote{The writing in the old format is not supported and all migrated tapes are marked as read-only.}.
 
 Despite the fact, that OSM and CTA have completely different high-level designs both system catalogs are pretty similar (Fig.\ref{fig:osm_entry_example} and Fig.\ref{fig:cta_entry_example}) and require very few adjustments during the schema migration.
@@ -191,11 +196,23 @@ Despite the fact, that OSM and CTA have completely different high-level designs 
     \label{fig:cta_entry_example}
 \end{figure}
 
+The link between files stored in dCache and their location on a tape utilized so-called \textit{HSM-URI} - a URL that specifies the HSM type and an opaque for dCache HSM type specific identifier, that is generated by HSM when data are written to tape:
+
+~\\
+tape location = $\begin{cases}
+    osm://<instance>/111.222.333 &\text{for } OSM \\
+    cta://<instance>/archiveid=123 &\text{for } CTA
+\end{cases}$
+~\\
+
+dCache automatically will use the correct HSM setup baed on the HSM-type in the tape location URI.
+
 Since dCache can support multiple tape systems in parallel, the migration from OSM to CTA is performed experiment by experiment. As of today (August 2023), almost all experiments have already migrated and newly created data is being written on tape with CTA.
 
 \section{First operational experience}
 \label{experence}
 
+The current deployment at DESY provides a single CTA instance shared between all dCache instances. We use four LTO-9 or IBM TS1160 tape drives attached per single tape server node. The hosts are equipped with 100 Gb/s, which is more than sufficient for the system's theoretical maximum streaming rate of 12.8Gb/s (4 x 400 MiB/s). During operation, the observed average drive seed was around 350MiB/s.  An NFS-mounted volume is used as the backend for the scheduler queue and easily handles a large number of requests.
 
 \begin{figure}[h]
     \centering
@@ -204,12 +221,16 @@ Since dCache can support multiple tape systems in parallel, the migration from O
     \label{fig:dcache_cta_deplyment}
 \end{figure}
 
+The biggest challenge for the operational team was(is) the differences with existing OSM installation. Despite the fact that CTA deployment is simpler to operate\footnote{This is of course a subjective impression of the team members.}, The new unfamiliar error situations have been observed. During the first operation mouth many modifications to the dcache-cta and cta-grps-frotend have been applied. For example: to control the number of gRPC server threads, that process incoming requests on CTA frontend, adjust the dCache $\leftrightarrow$ CTA communication timeout, dCache internal HSM requests lifetime, number of open file descriptors and others. We anticipate that this list will expand as our experience with CTA continues to mature.
+
 \section{Summary and future work}
 \label{summary}
 
-Today, we are pretty confident that dCache+CTA will address the data archival requirements HEP, Photon Science and EuXFEL at DESY. We hope other sites with dCache and tape libraries or plan to have one will benefit from our work and experience. Thus, all activities are documented and shared with the dCache community.
+Today, we are pretty confident that dCache+CTA will address the data archival requirements HEP, Photon Science and EuXFEL at DESY. The system has proven to provide the expected data rates and functionality. The migration from OSM to CTA was started in the spring of 2023 and is expected to be completed by the end of 2023.
 
-The dCache+CTA is installed at DESY and under intensive testing. A test instance is connected to physical hardware and a production environment-like load is applied. After three decades with OSM we have to gain new operational experience with CTA, understand system behavior under high load, and recognize error cases. Moreover, the existing tape cartridges, which are written with OSM, should be recognized by CTA. A joint team of developers from Fermilab and DESY works together to extend CTA's tape server to support multiple tape formats.
+All changes that are required to run dCache with CTA are part of the standard dCache builds (starting from dCache version 7.2) and public CTA releases (starting from {4,5}.7.12). The setup at DESY is replicated by PIC in Barcelona and Fermilab, in the USA. Both sites currently run Enstore\cite{enstore} and plan to migrate to dCache+CTA in 2024.
+ 
+The new gRPC-based interface has shown its simplicity and functionality and is under evaluation by the EOS-CTA team for adoption.
 
-\bibliography{bibliography.bib}
+\bibliography{bibliography}
 \end{document}
