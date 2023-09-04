@@ -214,6 +214,8 @@ Since dCache can support multiple tape systems in parallel, the migration from O
 
 The current deployment at DESY provides a single CTA instance shared between all dCache instances. We use four LTO-9 or IBM TS1160 tape drives attached per single tape server node. The hosts are equipped with 100 Gb/s, which is more than sufficient for the system's theoretical maximum streaming rate of 12.8Gb/s (4 x 400 MiB/s). During operation, the observed average drive speed was around 350MiB/s.  An NFS-mounted volume is used as the backend for the scheduler queue and easily handles a large number of archive and restore requests.
 
+Based on our experience with dCache and OSM, the CTA instance at DESY uses the PostgreSQL database\cite{postgres} as a backend for catalogue implementation. We run PostgreSQL in hot stand-by mode to ensure the system's reliability and performance.
+
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.30 ]{cta-deployment-desy.png}
@@ -223,14 +225,17 @@ The current deployment at DESY provides a single CTA instance shared between all
 
 The biggest challenge for the operational team was(is) the differences with existing OSM installations. Despite the fact that CTA deployment is simpler to operate\footnote{This is of course a subjective impression of the team members.}, new unfamiliar error situations have been observed. During the first month of operation, many modifications to the dcache-cta and cta-grpc-frontend have been applied. For example: added option to control the number of gRPC server threads, that process incoming requests on CTA frontend; implemented dCache $\leftrightarrow$ CTA communication timeout; increased dCache internal HSM requests lifetimes; the number of open file descriptors have been updated to match the number of gRPC requests. We anticipate that this list will expand as our experience with CTA continues to mature.
 
+
 \section{Summary and future work}
 \label{summary}
 
 Today, we are pretty confident that dCache+CTA will address the data archival requirements of HEP, Photon Science and EuXFEL at DESY. The system has proven to provide the expected data rates and functionality. The migration from OSM to CTA was started in the spring of 2023 and is expected to be completed by the end of 2023.
 
-All changes that are required to run dCache with CTA are part of the standard dCache builds (starting from dCache version 7.2) and public CTA releases (starting from {4,5}.7.12). The setup at DESY is replicated by PIC in Barcelona and Fermilab, in the USA. Both sites currently run Enstore\cite{enstore} and plan to migrate to dCache+CTA in 2024.
+The CTA's open-source development style allows the DESY team to actively contribute to the project. All changes that are required to run dCache with CTA are part of the standard dCache builds (starting from dCache version 7.2) and public CTA releases (starting from {4,5}.7.12). The setup at DESY is replicated by PIC in Barcelona and Fermilab, in the USA. Both sites currently run Enstore\cite{enstore} and plan to migrate to dCache+CTA in 2024.
  
 The new gRPC-based interface has shown its simplicity and functionality and is under evaluation by the EOS-CTA team for adoption.
+
+Both CTA and dCache projects are rapidly changing to match the requirements of the scientist. To avoid regressions, all software releases are intensively tested for interoperability. However, today the testing of CTA $\leftrightarrow$ dCache integration is a manual operation, thus error-prone and doesn't scale. The automatization of such test procedures is essential for catching defects early in the development cycle and ensuring the software quality.
 
 \bibliography{bibliography}
 \end{document}
