@@ -129,7 +129,7 @@ The CTA has two key components: frontend and tape daemon (Fig. \ref{fig:cta_over
 
 \begin{figure}[h]
     \centering
-    \includegraphics[scale=0.25]{cta-design.png}
+    \includegraphics[scale=0.25]{eos+cta.png}
     \caption{CTA design overview}
     \label{fig:cta_overview}
 \end{figure}
@@ -144,7 +144,7 @@ The CTA scheduler queue is backed by the CEPH\cite{ceph} object store or by a sh
 \label{sec:integration}
 
 dCache has a flexible tape interface which allows connectivity to any tape system. There are two ways that a file can be migrated to tape. Either dCache calls an HSM-specific copy command or it interacts with the tape system via an in-dCache HSM-specific driver, called a nearline storage provider. The latter has been shown (by NDGF, TRIUMF and KIT Tier-1s), to provide better resource utilization and efficiency\cite{endit_kit}. The achieve seamless integration with CTA the dCache developers at DESY have therefore implemented a CTA-specific nearline storage provider, called dcache-cta\cite{dcache_cta}, and a corresponding frontend component for CTA. The communication between dCache and the new frontend is based on Google’s gRPC library.
-
+\newpagex
 \begin{lstlisting}[label=grpc-frontend,caption={gRPC service definition},keywords={service,rpc,returns}]
     service CtaRpc
     {
@@ -163,7 +163,7 @@ As CTA has its own scheduler, to avoid double scheduling,  the flush and restore
 
 \begin{figure}[h]
     \centering
-    \includegraphics[scale=0.25]{dcache-cta-integration.png}
+    \includegraphics[scale=0.25]{dcache+cta.png}
     \caption{dCache integration with CTA}
     \label{fig:dcache_integration}
 \end{figure}
@@ -238,6 +238,5 @@ The new gRPC-based interface has proven its simplicity and functionality and is 
 
 Both CTA and dCache projects are rapidly changing to match the requirements of the scientist. To avoid regressions, all software releases are intensively tested for interoperability. However, today the testing of CTA $\leftrightarrow$ dCache integration is a manual operation, thus error-prone and not scalable. The automatization of such test procedures is essential for catching defects early in the development cycle and ensuring software quality.
 
-\newpage
 \bibliography{bibliography}
 \end{document}
